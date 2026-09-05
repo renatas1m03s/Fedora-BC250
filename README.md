@@ -259,14 +259,13 @@ O Fedora, como muitos sistemas modernos, usa o swap em RAM, mas em um sistema co
 
 Os passos a seguir devem ser executados com cuidado.
 ```
-sudo dnf remove zram-generator-defaults
+sudo dnf remove zram-generator-defaults -y
 ```
 ```
 echo -e "add_drivers+=\" lz4 lz4_compress \"" | sudo tee -a /etc/dracut.conf.d/zswap.conf
 ```
 ```
-sudo grubby --args="systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30"
-```
+sudo grubby --args="systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30" --update-kernel=ALL
 
 **Execute a seguinte sequência de comandos UM POR UM, só passando ao próximo se o anterior executar sem erros**
 ```
@@ -280,37 +279,29 @@ sudo swapon /swap/swapfile
 ```
 ```
 echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
+```  
+> [!NOTE]
+> Se o propósito da sua instalação é usar a BC-250 para jogar ou em um ambiente doméstico, pode-se desabilitar o SELINUX é um componente de segurança do Fedora.  
+
 ```
-  
-Reinicie o Fedora e a troca para ZSWAP estará concluída
+sudo grubby --args="selinux=0" --update-kernel=ALL
+```  
+    
+Reinicie o Fedora e a troca para ZSWAP estará concluída  
+
+## Corrigindo a telemetria da GPU
 
 ## Omitindo a mensagem RDSEED no boot
 Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
 
 Apesar de atualmente não gerar qualquer problema, além do incômodo estético, é possível omitir essa mensagem no boot, bastando para isso adicionar mais um parâmetro ao kernel.
 
-Aproveitando o momento de editar os parâmetros de boot para incluir o mitigations=off que melhora o desempenho em algumas situações relacionadas a jogos
+Aproveitando o momento de editar os parâmetros de boot para incluir o **"mitigations=off"** que melhora o desempenho em algumas situações relacionadas a jogos
 
-**Novamente vamos editar as opções de boot do limine**
+**Novamente vamos editar as opções de boot grub**
 ```
-sudo nano /etc/default/limine
-```
-Localizar a linha **"KERNEL_CMDLINE[default]"** e adicionar depois de **quiet** os parâmetros
-```
-loglevel=0 mitigations=off
-```
-O resultado ficará algo parecido com a linha a seguir:
-
-**KERNEL_CMDLINE[default]+="quiet loglevel=0 mitigations=off nowatchdog splash...**
-
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano
-
-**Após isso atualizar o bootloader com o comando:**
-```
-sudo limine-update
-```
-
-
+sudo grubby --args="loglevel=0 mitigations=off" --update-kernel=ALL
+```  
 
 ## Conclusão
-A maior parte desses procedimentos é válida para o Arch Linux, bastando as premissas do Limine e do BTRFS estarem atendidas.
+A maior parte desses procedimentos é válida para a base Fedora que não seja imutável
