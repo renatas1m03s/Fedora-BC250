@@ -289,8 +289,15 @@ sudo grubby --args="selinux=0" --update-kernel=ALL
     
 Reinicie o Fedora e a troca para ZSWAP estará concluída  
 
-## Corrigindo a telemetria da GPU
+## Corrigindo a telemetria da GPU  
+Se os 8 cores estiverem habilitados, provavelmente a telemetria do GPU estará bagunçada, mas a correção é simples.  
+   
+> [!NOTE]
+> Essa correção funciona bem no mangohud, mas não surte efeito no **"btop"**.  
 
+```
+  
+ 
 ## Omitindo a mensagem RDSEED no boot
 Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
 

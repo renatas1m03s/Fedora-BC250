@@ -25,6 +25,8 @@ sudo nano /etc/default/grub...
 
 update-grub
 
+
+
 sudo dnf copr enable filippor/bazzite
 sudo dnf install cyan-skillfish-governor-smu
 
