@@ -1,9 +1,7 @@
 # Sobre
-Este documento tem como objetivo mostrar como ajustar ``MANUALMENTE`` uma instalação padrão do CachyOS para extrair o máximo de desempenho da placa AsRock BC-250.
+Este documento tem como objetivo mostrar como ajustar ``MANUALMENTE`` uma instalação padrão do Fedora para extrair o máximo de desempenho da placa AsRock BC-250.
 
 Um dos objetivos aqui é municiar de conhecimento alguém que por conta dessa plaquinha maravilhosa, foi atraído pelo linux,  mas que não quer executar simplesmente um conjunto de scripts sem saber o que está acontecendo "sob o capô".
-
-`Obs.: Existem vários scripts prontos, desenvolvidos por muita gente boa, que executam todos esses passos de forma automática.`
 
 Um vídeo com a demonstração e explicação de cada um dos pontos deste documento pode ser assistido nesse link [Setup MANUAL do Linux CachyOS/Arch na BC-250](https://www.youtube.com/watch?v=wMqUmxJdXNo)
 
@@ -33,138 +31,84 @@ Capítulos do vídeo:
 
 A comunidade em torno da BC-250 é extremamente unida e produtiva e alguns passos descritos aqui podem se tornar obsoletos muito rapidamente, portanto lembre-se sempre de consultar a página [AMD BC250 Documentation](https://elektricm.github.io/amd-bc250-docs/)
 
-Procedimentos correntes em `31/07/2026`
+Procedimentos correntes em `04/09/2026`
 
 # Premissas
-- Sistema Operacional: **Linux CachyOS com KDE/Plasma**
+- Sistema Operacional: **Fedora 44 com KDE/Plasma**
 - Sitemas de arquivos: **BTRFS**
-- Bootloader: **Limine**
-- Não é necessário ter atualizado a BIOS, mas não interfere se o tiver feito, além disso  a BIOS que libera 2 cores e 4 threads é totalmente compatível com esses procedimentos.
-- Instalação limpa do Linux CachyOS sem ter executado nenhum dos scripts automatizados
+- Bootloader: **grub**
+- Instalação limpa do Fedora 44 sem ter executado nenhum dos scripts automatizados
 - Usuário com privilégio de sudo
+- BIOS atualizada com a injeção do fix do ACPI 
 
 ## Conceitos básicos
 
 - Ao copiar os comandos para execução, tente não copiar o bloco todo, copie linha a linha para ter controle sobre a execução e verificar se a mesma foi bem sucedida.
-- Uma das maravilhas da base Arch (CachyOS é baseado no Arch Linux) é a possibilidade de se usar uma base de pacotes mantida pela própria comunidade que é o AUR (Arch User Repository).
-- As Wikis do [CachyOS](https://wiki.cachyos.org/pt/) e do [Arch](https://wiki.archlinux.org/title/Main_page) são suas amigas, não hesite em consultá-las.
 
 ## Tópicos abordados
-
-- [Instalando o yay ou o paru](#instalando-o-yay-ou-o-paru)
-- [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)
-- [Instalando ACPI Fix](#instalando-o-acpi-fix)
+  
+- [Primeiros passos pós instalação](#primeiros-passos-pós-instalação)  
+- [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)  
+- [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)  
 - [Habilitandos as 40 unidades computacionais](#habilitando-as-40-unidades-computacionais)
 - [Configurando a VRAM](#configurando-a-vram)
-- [Omitindo a mensagem RDSEED no boot](#omitindo-a-mensagem-rdseed-no-boot)
 - [Overclock na GPU](#overclock-na-gpu)
 - [Overclock na CPU](#overclock-na-cpu)
 - [Convertendo a zram para zswap](#convertendo-a-zram-para-zswap)
+- [Omitindo a mensagem RDSEED no boot](#omitindo-a-mensagem-rdseed-no-boot)
+- Habilitando o Gaming Mode
 
-## Instalando o yay ou o paru
-O gerenciador oficial de pacotes do CachyOS e do Arch é o pacman, mas para poder acessar os pacotes do AUR existem algumas ferramentas, como por exemplo o `paru` e `yay`, que podem susbtituir o pacman.
-Pessoalmente eu prefiro a forma como o `yay` trabalha, mas o resultado de ambos é o mesmo.
+## Primeiros passos pós instalação
 
-Nesse tópico eu mostro como instalar ambos.
-
-**Paru**
+### Atualizar o Fedora  
+É recomendado sempre atualizar um sistema operacional logo após o primeiro boot, seja linux ou windows, obviamente que distribuições roling release que são instaladas a partir da internet não tem essa necessidade.  
+No caso do fedora a atualização via linhda de comando é feita com o seu gerenciador de pacotes que atualmente é o **DNF5**.  
+O comando para atualizar é:
 ```
-sudo pacman -S paru
+sudo dnf upgrade -y
 ```
-
-**Yay**
+  
+### Habilitar os repositórios extras  
+A filosofia do Fedora é não ter em seus repositórios "core" nenhum pacote que não seja open-source e de livre distribuição, por isso alguns pacotes base, como utilitários de multimída não tem alguns codecs, mas isso não significa que não estejam disponíveis para o Fedora, para usá-los basta habilitar os repositórios **fusion free e nonfree**.  
+  
+Para habilitar esses repositórios basta executar os comandos a seguir:  
 ```
-cd /tmp && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
 ```
-
-Obs1.: pacman, paru e yay aceitam os mesmos parâmetros e opções. Dois que eu costumo usar são `--noconfirm` (elimina a necessidade confirmação) e o `--needed` (se o componente/dependência já existir no ambiente ele não reinstala).
-
-Obs2.: Depois de instalar algum deles podemos usá-los no lugar do pacman.
-
-**Exemplo: Para atualizar o S.O. em vez de "sudo pacman -Syu --noconfirm", podemos usar**
+    
+### Instalando os codecs de multimidia 
+Após habilitarmos os repositórios free e nonfree vamos instalar/atualizar os codecs e utilitário de multimídia.
 ```
-yay -Syu --noconfirm
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y
 ```
-
+```
+sudo dnf install @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin -y
+```
+```
+sudo dnf install mesa-va-drivers-freeworld -y
+```
+```
+sudo dnf swap mesa-vulkan-drivers{,-freeworld} -y
+```  
+  
 ## Instalando as dependências e pré-requisitos
 Alguns dos próximos passos necessitam da instalação de pré-requisitos, são eles:
 
-- **rocm-smi-lib** - habilita o btop ler as informações da GPU;
 - **stress** - necessário para o procedimento de overclock/undervolt da CPU;
 - **umr** - necessário para o script que libera as unidades computacionais (CUs) adicionais.
-- **python-pipx** - será usado para configurar o overclock da CPU
+- **pipx** - será usado para configurar o overclock da CPU
 
 Podemos fazer tudo em uma linha de comando única:
 ```
-yay -S --noconfirm --needed rocm-smi-lib stress umr python-pipx
+sudo dnf install stress umr pipx -y
 ```
-
-`Obs: Não se usa o sudo antes do yay ou do paru - Como eles invocam o pacman, no momento certo a senha será solicitada.`
-
-## Instalando o ACPI Fix
-
-Por padrão o CachyOS ou o Arch Linux não conseguem enxergar todos os estados da CPU da BC-250 e por isso o funcionamento fica prejudicado, pois, principalmente em idle, as frequências possíveis não são alcançadas. Para corrigir isso é necessário sobrescrever (override) as instruções padrão do ACPI.
-
-Esse procedimento é o que está descrito a seguir.
-
-Obs1.: No linux existem muitas formas de se alcançar um mesmo resultado e algumas vezes a escolha é baseada única e exclusivamente na preferência pessoal. A seguir o método que eu acho mais simples para se aplicar o fix do `ACPI`.
-
-Obs2.: Para ficar organizado eu gosto de concentrar todos os scripts e apps relacionados a BC-250 em uma pasta no meu `home` chamada `bc250`.
-
-**Comandos para criar a pasta bc250 no home do usuário**
-```
-mkdir -pv ~/bc250/acpi-fix && cd ~/bc250
-```
-Obs1.: O comando mkdir (abreviação para make directory) cria a pasta e o comando cd (abreviação de change directory) vai para a pasta criada, além disso o "&&" permite encadear mais de um comando e basicamente significa que quando terminar de executar o mkdir, se ele terminar com sucesso, executa o cd.
-
-Obs2.: No linux o \~ é um alias para o home do usuário.
-
-Ex. um usuário de nome palmeiras teria o home igual a /home/palmeiras, nesse caso ~ = /home/palmeiras
-
-### ATENÇÃO: Existem dois ACPI Fix - Um para BIOS com 8 cores e o outro para BIOS com 6 cores.
-
-**Fix para a BIOS com 8 cores**
-```
-git clone https://github.com/mendesrr/bc250-acpi-fix-updated-8c ~/bc250/acpi-fix
-```
-**Fix para a BIOS original ou atualizada, mas somente com 6 cores**
-```
-git clone https://github.com/bc250-collective/bc250-acpi-fix ~/bc250/acpi-fix
-```
-**Criando uma pasta no /etc para receber o fix e o copiando para lá** 
-```
-sudo mkdir -pv /etc/initcpio/acpi_override && sudo cp -v ~/bc250/acpi-fix/*.aml /etc/initcpio/acpi_override
-```
-**Editando o arquivo mkinitcpio.conf para adicionar um HOOK no initramfs**
-```
-sudo nano /etc/mkinitcpio.conf
-```
-localizar uma linha parecida com:
-
-**HOOKS=(base systemd autodetect microcode kms modconf block keyboard sd-vconsole plymouth filesystems)**
-
-Observar que existem várias linhas parecidas com ela, mas somente uma sem o **"#"** na frente, essa é a que iremos modificar.
-
-Acrescentar o parâmetro **acpi_override** ao final logo após **filesystems**
-
-**HOOKS=(base systemd autodetect microcode kms modconf block keyboard sd-vconsole plymouth filesystems acpi_override)**
-
-`Obs.: Os parâmetros contidos entre os parênteses podem variar de sistema para sistema, tome cuidado para a única alteração realizada ser o acréscimo do acpi_override.`
-
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano.
-
-**Gere o initramfs novamente**
-```
-sudo limine-update
-```
-Reinicie o CachyOS e após isso a CPU conseguirá ficar em 800 MHz quando em iddle.
-
+  
 ## Habilitando as 40 unidades computacionais
 Assumindo que o **umr** já está instalado (vide tópico [Instalando as dependências/pré-requisitos](#instalando-as-dependências)) o procedimento para liberar as unidades computacionais adicionais é relativamente simples.
 
 **Baixando o script que libera as unidade computacionais adicionais**
 ```
-cd ~/bc250 && curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh && chmod +x bc250-cu-live-manager.sh
+mkdir ~/bc250 && cd ~/bc250 && curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh && chmod +x bc250-cu-live-manager.sh
 ```
 **Executando o script**
 ```
@@ -217,21 +161,20 @@ Valor dinâmico possível x, no caso 5G
 ```
 Após obter o valor a ser passado vamos configurar o limine para passar esse valor na inicialização do kernel
 ```
-sudo nano /etc/default/limine
+sudo nano /etc/default/grub
 ```
-Localizar a linha **"KERNEL_CMDLINE[default]"** e adicionar ao final antes das aspas duplas.
+Localizar a linha **"GRUB_CMDLINE_LINUX="** e adicionar ao final:
 ```
 ttm.pages_limit=1310720
 ```
-`Obs.: O próximo passo (omitir a mensagem do RDSEED) também envolve passar um parâmetro para o kernel, por isso, se quiser otimizar as atividades, mantenha o arquivo aberto no nano e pule para a próxima etapa.`
 
 Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano
 
 **Após isso atualizar o bootloader com o comando:**
 ```
-sudo limine-update
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
-Reinicie o CachyOS e sua VRAM estará configurada para 6GB e podendo chegar a 11GB.
+Reinicie o Fedora e sua VRAM estará configurada para 6GB e podendo chegar a 11GB.
 
 **Referências:**
 
@@ -239,31 +182,6 @@ Reinicie o CachyOS e sua VRAM estará configurada para 6GB e podendo chegar a 11
 
 [fanoush/bc250_memcfg](https://github.com/fanoush/bc250_memcfg)
 
-## Omitindo a mensagem RDSEED no boot
-Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
-
-Apesar de atualmente não gerar qualquer problema, além do incômodo estético, é possível omitir essa mensagem no boot, bastando para isso adicionar mais um parâmetro ao kernel.
-
-Aproveitando o momento de editar os parâmetros de boot para incluir o mitigations=off que melhora o desempenho em algumas situações relacionadas a jogos
-
-**Novamente vamos editar as opções de boot do limine**
-```
-sudo nano /etc/default/limine
-```
-Localizar a linha **"KERNEL_CMDLINE[default]"** e adicionar depois de **quiet** os parâmetros
-```
-loglevel=0 mitigations=off
-```
-O resultado ficará algo parecido com a linha a seguir:
-
-**KERNEL_CMDLINE[default]+="quiet loglevel=0 mitigations=off nowatchdog splash...**
-
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano
-
-**Após isso atualizar o bootloader com o comando:**
-```
-sudo limine-update
-```
 
 ## Overclock na GPU
 Por padrão a GPU da BC-250 opera em 1500 MHz constantes e isso não é eficiente em consumo, além de limitar o potencial dessa plaquinha tão maravilhosa.
@@ -274,7 +192,8 @@ Essa operação padrão pode ser subvertida com a instalação do **Cyan Skillfi
 
 **Primeiro passo é instalação do serviço**
 ```
-yay -S --noconfirm --needed cyan-skillfish-governor-smu
+sudo dnf copr enable filippor/bazzite
+sudo dnf install cyan-skillfish-governor-smu
 ```
 Durante a instalação o serviço criará um arquivo de configuração **(config.toml)** na pasta **/etc/cyan-skillfish-governor-smu**
 
@@ -342,38 +261,18 @@ O CachyOS, como muitos sistemas modernos, usa o swap em RAM, mas em um sistema c
 
 Os passos a seguir devem ser executados com cuidado.
 
-**Editar o arquivo mkinitcpio.conf e adicionar o módulo de compressão do swap**
-```
-sudo nano /etc/mkinitcpio.conf
-``` 
-Procurar a linha:
+sudo dnf remove zram-generator-defaults
 
-**MODULES=()**
+echo -e "add_drivers+=\" lz4 lz4_compress \"" | sudo tee -a /etc/dracut.conf.d/zswap.conf
 
-Alterá-la para:
-
-**MODULES=(lz4)**
-
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano.
-
-**Adicionar mais um parâmetro ao kernel no limine**
-```
-sudo nano /etc/default/limine
-```
-Localizar a linha **"KERNEL_CMDLINE[default]"** e adicionar ao final dela:
-```
+grub
 systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30
-```
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano.
 
-**Após isso atualizar o bootloader e o initramfs com o comando:**
-```
-sudo limine-update
-```
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
 
 **Execute a seguinte sequência de comandos UM POR UM, só passando ao próximo se o anterior executar sem erros**
 ```
-sudo touch /etc/udev/rules.d/30-zram.rules
 
 sudo btrfs subvolume create /swap
 
@@ -383,11 +282,35 @@ sudo swapon /swap/swapfile
 
 echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
 ```
-Reinicie o CachyOS e a troca para ZSWAP estará concluída
+Reinicie o Fedora e a troca para ZSWAP estará concluída
 
-**Referência:**
+## Omitindo a mensagem RDSEED no boot
+Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
 
-[CachyOS Wiki - Mudar de ZRam para Zswap](https://wiki.cachyos.org/pt/configuration/general_system_tweaks/#mudar-de-zram-para-zswap)
+Apesar de atualmente não gerar qualquer problema, além do incômodo estético, é possível omitir essa mensagem no boot, bastando para isso adicionar mais um parâmetro ao kernel.
+
+Aproveitando o momento de editar os parâmetros de boot para incluir o mitigations=off que melhora o desempenho em algumas situações relacionadas a jogos
+
+**Novamente vamos editar as opções de boot do limine**
+```
+sudo nano /etc/default/limine
+```
+Localizar a linha **"KERNEL_CMDLINE[default]"** e adicionar depois de **quiet** os parâmetros
+```
+loglevel=0 mitigations=off
+```
+O resultado ficará algo parecido com a linha a seguir:
+
+**KERNEL_CMDLINE[default]+="quiet loglevel=0 mitigations=off nowatchdog splash...**
+
+Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano
+
+**Após isso atualizar o bootloader com o comando:**
+```
+sudo limine-update
+```
+
+
 
 ## Conclusão
 A maior parte desses procedimentos é válida para o Arch Linux, bastando as premissas do Limine e do BTRFS estarem atendidas.

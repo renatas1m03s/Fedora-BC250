@@ -1,0 +1,45 @@
+sudo dnf upgrade -y
+
+reboot
+
+habilitando os repositorios fusion free e nonfree
+
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+
+sudo dnf install @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+
+sudo dnf install mesa-va-drivers-freeworld
+sudo dnf swap mesa-vulkan-drivers{,-freeworld}
+
+reboot
+
+mkdir ~/bc250 && cd ~/bc250 && curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh && chmod +x bc250-cu-live-manager.sh
+
+cd ~/bc250 && wget https://github.com/fanoush/bc250_memcfg/releases/download/v0.1/bc250_memcfg.zip && unzip bc250_memcfg.zip && cd ~/bc250/bc250_memcfg
+
+sudo ./bc250memcfg UMA_SIZE 6144
+
+sudo nano /etc/default/grub...
+
+update-grub
+
+sudo dnf copr enable filippor/bazzite
+sudo dnf install cyan-skillfish-governor-smu
+
+sudo nano /etc/cyan-skillfish-governor-smu/config.toml
+
+sudo systemctl enable --now cyan-skillfish-governor-smu
+
+
+sudo dnf remove zram-generator-defaults
+
+echo -e "add_drivers+=\" lz4 lz4_compress \"" | sudo tee -a /etc/dracut.conf.d/zswap.conf
+
+grub
+systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30
+
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+
