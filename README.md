@@ -68,7 +68,7 @@ O comando para atualizar é:
 ```
 sudo dnf upgrade -y
 ```  
-> [!TIP]  
+> [!DICA]  
 > O parâmetro **"-y"** evita que o DNF solicite uma confirmação para prosseguir.  
   
 ### Habilitar os repositórios extras  
