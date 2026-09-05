@@ -68,11 +68,11 @@ O comando para atualizar é:
 ```
 sudo dnf upgrade -y
 ```  
-> [!DICA]  
+> [!TIP]  
 > O parâmetro **"-y"** evita que o DNF solicite uma confirmação para prosseguir.  
   
 ### Habilitar os repositórios extras  
-A filosofia do Fedora é não ter em seus repositórios "core" nenhum pacote que não seja open-source e de livre distribuição, por isso alguns pacotes base, como utilitários de multimída não tem alguns codecs, mas isso não significa que não estejam disponíveis para o Fedora, para usá-los basta habilitar os repositórios **fusion free e nonfree**.  
+A filosofia do Fedora é não ter em seus repositórios "core" nenhum pacote que não seja open-source e de livre distribuição, por isso alguns pacotes base, como utilitários de multimída, não tem alguns codecs, mas isso não significa que não estejam disponíveis para o Fedora, para usá-los basta habilitar os repositórios **fusion free e nonfree**.  
   
 Para habilitar esses repositórios basta executar os comandos a seguir:  
 ```
@@ -165,21 +165,11 @@ Valor dinâmico possível x, no caso 5G
 ((x * 1024) * 1024) / 4 
 ((5 * 1024) * 1024) / 4 = 1310720
 ```
-Após obter o valor a ser passado vamos configurar o limine para passar esse valor na inicialização do kernel
+Após obter o valor a ser passado vamos configurar o grub para adicionar esse parâmetro de inicialização ao kernel.  
 ```
-sudo nano /etc/default/grub
+sudo grubby --args=tm.pages_limit=1310720 --update-kernel=ALL
 ```
-Localizar a linha **"GRUB_CMDLINE_LINUX="** e adicionar ao final:
-```
-ttm.pages_limit=1310720
-```
-
-Use a combinação de teclas **ctrl + s** para salvar o arquivo e **ctrl + x** para encerrar o editor nano
-
-**Após isso atualizar o bootloader com o comando:**
-```
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-```
+  
 Reinicie o Fedora e sua VRAM estará configurada para 6GB e podendo chegar a 11GB.
 
 **Referências:**
@@ -198,8 +188,10 @@ Essa operação padrão pode ser subvertida com a instalação do **Cyan Skillfi
 
 **Primeiro passo é instalação do serviço**
 ```
-sudo dnf copr enable filippor/bazzite
-sudo dnf install cyan-skillfish-governor-smu
+sudo dnf copr enable filippor/bazzite -y
+```
+```
+sudo dnf install cyan-skillfish-governor-smu -y
 ```
 Durante a instalação o serviço criará um arquivo de configuração **(config.toml)** na pasta **/etc/cyan-skillfish-governor-smu**
 
@@ -263,31 +255,33 @@ Obs.: Existe um parâmetro para o **bc250_detect.py** que é o **"--keep"** que 
 [bc250-collective/bc250_smu_oc](https://github.com/bc250-collective/bc250_smu_oc)
 
 ## Convertendo a zram para zswap
-O CachyOS, como muitos sistemas modernos, usa o swap em RAM, mas em um sistema com somente 16GB, compartilhado com a GPU, isso tem um custo muito alto e pode gerar problemas, por isso a recomendação é converter a **ZRAM** em **ZSWAP**
+O Fedora, como muitos sistemas modernos, usa o swap em RAM, mas em um sistema com somente 16GB que ainda é compartilhado com a GPU, isso tem um custo muito alto e pode gerar problemas, por isso a recomendação é converter a **ZRAM** em **ZSWAP**
 
 Os passos a seguir devem ser executados com cuidado.
-
+```
 sudo dnf remove zram-generator-defaults
-
+```
+```
 echo -e "add_drivers+=\" lz4 lz4_compress \"" | sudo tee -a /etc/dracut.conf.d/zswap.conf
-
-grub
-systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30
-
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-
+```
+```
+sudo grubby --args="systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30"
+```
 
 **Execute a seguinte sequência de comandos UM POR UM, só passando ao próximo se o anterior executar sem erros**
 ```
-
 sudo btrfs subvolume create /swap
-
+```
+```
 sudo btrfs filesystem mkswapfile --size 8g --uuid clear /swap/swapfile
-
+```
+```
 sudo swapon /swap/swapfile
-
+```
+```
 echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
 ```
+  
 Reinicie o Fedora e a troca para ZSWAP estará concluída
 
 ## Omitindo a mensagem RDSEED no boot
