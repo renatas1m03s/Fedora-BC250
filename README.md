@@ -296,16 +296,16 @@ Se os 8 cores estiverem habilitados, provavelmente a telemetria do GPU estará b
 > Essa correção funciona bem no mangohud, mas não surte efeito no **"btop"**.  
 
 ```
-git clone   
+git clone https://github.com/renatas1m03s/Fedora-BC250.git ~/bc250/Fedora-BC250 && cd ~/bc250/Fedora-BC250/bc250-gfxclk-fix && sudo ./install.sh
+```
  
 ## Omitindo a mensagem RDSEED no boot
 Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
 
 Apesar de atualmente não gerar qualquer problema, além do incômodo estético, é possível omitir essa mensagem no boot, bastando para isso adicionar mais um parâmetro ao kernel.
 
-Aproveitando o momento de editar os parâmetros de boot para incluir o **"mitigations=off"** que melhora o desempenho em algumas situações relacionadas a jogos
+Aproveitando o momento de editar os parâmetros de boot podemos incluir o **"mitigations=off"** que melhora o desempenho em algumas situações relacionadas a jogos
 
-**Novamente vamos editar as opções de boot grub**
 ```
 sudo grubby --args="loglevel=0 mitigations=off" --update-kernel=ALL
 ```  
