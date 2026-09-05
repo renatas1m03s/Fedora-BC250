@@ -266,7 +266,7 @@ echo -e "add_drivers+=\" lz4 lz4_compress \"" | sudo tee -a /etc/dracut.conf.d/z
 ```
 ```
 sudo grubby --args="systemd.zram=0 zswap.enabled=1 zswap.shrinker_enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=30" --update-kernel=ALL
-
+```
 **Execute a seguinte sequência de comandos UM POR UM, só passando ao próximo se o anterior executar sem erros**
 ```
 sudo btrfs subvolume create /swap
@@ -281,7 +281,7 @@ sudo swapon /swap/swapfile
 echo "/swap/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
 ```  
 > [!NOTE]
-> Se o propósito da sua instalação é usar a BC-250 para jogar ou em um ambiente doméstico, pode-se desabilitar o SELINUX é um componente de segurança do Fedora.  
+> Se o propósito da sua instalação é usar a BC-250 para jogar ou em um ambiente doméstico, pode-se desabilitar o SELINUX que é um componente de segurança do Fedora e pode gerar necessidade de ajustes constantes em suas políticas.  
 
 ```
 sudo grubby --args="selinux=0" --update-kernel=ALL
@@ -296,7 +296,7 @@ Se os 8 cores estiverem habilitados, provavelmente a telemetria do GPU estará b
 > Essa correção funciona bem no mangohud, mas não surte efeito no **"btop"**.  
 
 ```
-  
+git clone   
  
 ## Omitindo a mensagem RDSEED no boot
 Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
