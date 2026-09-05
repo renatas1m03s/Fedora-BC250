@@ -62,18 +62,21 @@ Procedimentos correntes em `04/09/2026`
 
 ### Atualizar o Fedora  
 É recomendado sempre atualizar um sistema operacional logo após o primeiro boot, seja linux ou windows, obviamente que distribuições roling release que são instaladas a partir da internet não tem essa necessidade.  
-No caso do fedora a atualização via linhda de comando é feita com o seu gerenciador de pacotes que atualmente é o **DNF5**.  
+  
+No caso do fedora a atualização via linha de comando é feita com o seu gerenciador de pacotes que atualmente é o **DNF5**.  
 O comando para atualizar é:
 ```
 sudo dnf upgrade -y
-```
+```  
+> [!TIP]  
+> O parâmetro **"-y"** evita que o DNF solicite uma confirmação para prosseguir.  
   
 ### Habilitar os repositórios extras  
 A filosofia do Fedora é não ter em seus repositórios "core" nenhum pacote que não seja open-source e de livre distribuição, por isso alguns pacotes base, como utilitários de multimída não tem alguns codecs, mas isso não significa que não estejam disponíveis para o Fedora, para usá-los basta habilitar os repositórios **fusion free e nonfree**.  
   
 Para habilitar esses repositórios basta executar os comandos a seguir:  
 ```
-sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y && sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1 -y
 ```
     
 ### Instalando os codecs de multimidia 
@@ -132,8 +135,11 @@ Obs.: A versão do script de **30/07/2026** tem uma opção para habilitar os do
 
 ## Configurando a VRAM
 Recentemente a atualização da BIOS para configurar a alocação dinâmica da VRAM deixou de ser necessária e isso pode ser conseguido com uma aplicação.
+  
+> [!IMPORTANT]  
+> Só execute os comandos desse tópico se a configuração da BIOS estiver igual aos parâmetros de fábrica.
 
-Pessoalmente eu tenho conseguido bons resultados com a alocação imediata de 6GB e a possibilidade de alocar mais 5GB, totalizando 11GB de VRAM máxima. Pelas minhas observações quando você começa com a VRAM em 512MB ela "gasta" um tempinho requisitando da RAM e liberando a VRAM depois que ela não é mais necessária. No meu caso, os 6GB são um ponto de equilíbrio bom.
+Pessoalmente eu tenho conseguido bons resultados com a alocação imediata de 6GB e a possibilidade de alocar mais 5GB, totalizando 11GB de VRAM máxima. Alguns jogos não lidam bem com a configuração dinâmica iniciando em 512MB, além de que quando você começa com a VRAM em 512MB ela "gasta" um tempinho requisitando da RAM e liberando a VRAM depois que ela não é mais necessária. No meu caso, os 6GB são um ponto de equilíbrio bom.
 
 Esse resultado pode ser obtido com a aplicação **bc250memcfg** e um parâmetro do kernel adicional no boot.
 
