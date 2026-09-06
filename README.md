@@ -3,30 +3,6 @@ Este documento tem como objetivo mostrar como ajustar ``MANUALMENTE`` uma instal
 
 Um dos objetivos aqui é municiar de conhecimento alguém que por conta dessa plaquinha maravilhosa, foi atraído pelo linux,  mas que não quer executar simplesmente um conjunto de scripts sem saber o que está acontecendo "sob o capô".
 
-Um vídeo com a demonstração e explicação de cada um dos pontos deste documento pode ser assistido nesse link [Setup MANUAL do Linux CachyOS/Arch na BC-250](https://www.youtube.com/watch?v=wMqUmxJdXNo)
-
-Capítulos do vídeo:
-
-- [Premissas](https://youtu.be/wMqUmxJdXNo?si=e1XKdalXV8MXIv8e&t=398)
-
-- [Recomendações básicas](https://youtu.be/wMqUmxJdXNo?si=14le6YOKBzC6raqX&t=516)
-
-- [Instalando o yay ou o paru](https://youtu.be/wMqUmxJdXNo?si=y0CDuUUDy8yeEfvs&t=726)
-
-- [Instalando os pré-requisito e dependências](https://youtu.be/wMqUmxJdXNo?si=ZstZabCPR_qHkd45&t=1130)
-
-- [Instalando o ACPI Fix da BC-250](https://youtu.be/wMqUmxJdXNo?si=fr0NyevKKox8watC&t=1541)
-
-- [Habilitando as 40 unidades computacionais (CUs)](https://youtu.be/wMqUmxJdXNo?si=FG6GdA2k9CpnKVec&t=2716)
-
-- [Configurando a VRAM dinâmica](https://youtu.be/wMqUmxJdXNo?si=oYQXe3Kl5_4y_vV1&t=3213)
-
-- [Configurando o overclock da GPU](https://youtu.be/wMqUmxJdXNo?si=RHcEwTcdupXLgu2c&t=3823)
-
-- [Configurando o overclock da CPU](https://youtu.be/wMqUmxJdXNo?si=KFxx2_g2wZxQu4Y8&t=4327)
-
-- [Convertendo ZRAM para ZSWAP](https://youtu.be/wMqUmxJdXNo?si=41uXkibmRpv-UIAO&t=4900)
-
 # Importante
 
 A comunidade em torno da BC-250 é extremamente unida e produtiva e alguns passos descritos aqui podem se tornar obsoletos muito rapidamente, portanto lembre-se sempre de consultar a página [AMD BC250 Documentation](https://elektricm.github.io/amd-bc250-docs/)
@@ -49,14 +25,14 @@ Procedimentos correntes em `04/09/2026`
   
 - [Primeiros passos pós instalação](#primeiros-passos-pós-instalação)  
 - [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)  
-- [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)  
 - [Habilitandos as 40 unidades computacionais](#habilitando-as-40-unidades-computacionais)
 - [Configurando a VRAM](#configurando-a-vram)
-- [Overclock na GPU](#overclock-na-gpu)
+- [Overclock na GPU](#overclock-na-gpu)  
+- [Corrigindo a telemetria da GPU](#corrigindo-a-telemetria-da-gpu)  
 - [Overclock na CPU](#overclock-na-cpu)
 - [Convertendo a zram para zswap](#convertendo-a-zram-para-zswap)
 - [Omitindo a mensagem RDSEED no boot](#omitindo-a-mensagem-rdseed-no-boot)
-- Habilitando o Gaming Mode
+- [Configurando a experiência de console](#configurando-a-experiência-de-console)
 
 ## Primeiros passos pós instalação
 
@@ -107,7 +83,7 @@ sudo dnf install stress umr pipx -y
 ```
   
 ## Habilitando as 40 unidades computacionais
-Assumindo que o **umr** já está instalado (vide tópico [Instalando as dependências/pré-requisitos](#instalando-as-dependências)) o procedimento para liberar as unidades computacionais adicionais é relativamente simples.
+Assumindo que o **umr** já está instalado (vide tópico [Instalando as dependências e pré-requisitos](#instalando-as-dependências-e-pré-requisitos)) o procedimento para liberar as unidades computacionais adicionais é relativamente simples.
 
 **Baixando o script que libera as unidade computacionais adicionais**
 ```
@@ -180,11 +156,9 @@ Reinicie o Fedora e sua VRAM estará configurada para 6GB e podendo chegar a 11G
 
 
 ## Overclock na GPU
-Por padrão a GPU da BC-250 opera em 1500 MHz constantes e isso não é eficiente em consumo, além de limitar o potencial dessa plaquinha tão maravilhosa.
+Por padrão a GPU da BC-250 opera em 1500 MHz constantes e isso além de não ser eficiente em consumo, limita o potencial dessa plaquinha tão maravilhosa.
 
 Essa operação padrão pode ser subvertida com a instalação do **Cyan Skillfish GPU Governor** habilitando frequências de 350 MHz até 2230 MHz e é esse o próximo passo da nossa jornada.
-
-`Obs.: Frequências de 350 MHz só são possíveis com um kernel com patch aplicado e isso já é padrão no CachyOS e no Arch Linux`
 
 **Primeiro passo é instalação do serviço**
 ```
@@ -216,7 +190,17 @@ Com o tempo pode-se brincar com as frequências e voltagens, para isso recomendo
 
 **Referência:**
 
-[filippor/cyan-skillfish-governor](https://github.com/filippor/cyan-skillfish-governor)
+[filippor/cyan-skillfish-governor](https://github.com/filippor/cyan-skillfish-governor)  
+  
+## Corrigindo a telemetria da GPU  
+Se os 8 cores estiverem habilitados, provavelmente a telemetria do GPU estará bagunçada, mas a correção é simples.  
+   
+> [!NOTE]
+> Essa correção funciona bem no mangohud, mas não surte efeito no **"btop"**.  
+
+```
+git clone https://github.com/renatas1m03s/Fedora-BC250.git ~/bc250/Fedora-BC250 && cd ~/bc250/Fedora-BC250/bc250-gfxclk-fix && sudo ./install.sh
+```
 
 ## Overclock na CPU
 
@@ -289,16 +273,6 @@ sudo grubby --args="selinux=0" --update-kernel=ALL
     
 Reinicie o Fedora e a troca para ZSWAP estará concluída  
 
-## Corrigindo a telemetria da GPU  
-Se os 8 cores estiverem habilitados, provavelmente a telemetria do GPU estará bagunçada, mas a correção é simples.  
-   
-> [!NOTE]
-> Essa correção funciona bem no mangohud, mas não surte efeito no **"btop"**.  
-
-```
-git clone https://github.com/renatas1m03s/Fedora-BC250.git ~/bc250/Fedora-BC250 && cd ~/bc250/Fedora-BC250/bc250-gfxclk-fix && sudo ./install.sh
-```
- 
 ## Omitindo a mensagem RDSEED no boot
 Os processadores baseados na APU Cyan Skillfish (Zen 2) não são compatíveis com a instrução RDSEED e no boot do linux aparece uma mensagem informando que isso está sendo desabilitado. Não há qualquer problema nessa mensagem e isso não tem maiores efeitos além dos estéticos.
 
@@ -309,6 +283,23 @@ Aproveitando o momento de editar os parâmetros de boot podemos incluir o **"mit
 ```
 sudo grubby --args="loglevel=0 mitigations=off" --update-kernel=ALL
 ```  
+  
+## Configurando a experiência de console  
+Por último, após o sistema operacional estar todo "tunado", vamos habilitar a experiência de console.  
+
+O pacote mínimo para iniciar é a steam e seus apps satélites como o mangohud e goverlay.
+```
+sudo dnf install steam gamescope mangohud goverlay -y
+```
+  
+Após isso vamos instalar e configurar a possibilidade do auto login em modo de console.  
+```
+git clone https://github.com/CachyOS/gamescope-session /tmp/gamescope-session && sudo cp -rv /tmp/gamescope-session/usr/* /usr/
+```
+  
+```
+sudo mkdir -vp /etc/plasmalogin.conf.d && echo -e "[Autologin]\nUser=$USER\nSession=gamescope-session.desktop" | sudo tee -a /etc/plasmalogin.conf.d/autologin.conf
+```
 
 ## Conclusão
 A maior parte desses procedimentos é válida para a base Fedora que não seja imutável
